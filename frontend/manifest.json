@@ -1,0 +1,8 @@
+{
+  "name": "Assistant Triangle",
+  "short_name": "Triangle AI",
+  "display": "standalone",
+  "start_url": ".",
+  "background_color": "#020617",
+  "theme_color": "#00f7ff"
+}
