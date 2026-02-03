@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Assistant Triangle</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="manifest" href="manifest.json">
+
+<style>
+:root{
+  --neon:#00f7ff;
+  --bg:#020617;
+  --panel:#060b22;
+  --text:#e5e7eb;
+}
+*{box-sizing:border-box;font-family:Segoe UI,Arial}
+body{
+  margin:0;
+  background:radial-gradient(circle at top,#0a1140,#01030c);
+  color:var(--text);
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  height:100vh;
+}
+.app{
+  width:95%;
+  max-width:1000px;
+  height:92vh;
+  background:var(--panel);
+  border-radius:20px;
+  box-shadow:0 0 60px rgba(0,247,255,.25);
+  display:flex;
+  flex-direction:column;
+}
+header{
+  display:flex;
+  gap:15px;
+  padding:20px;
+  border-bottom:1px solid rgba(255,255,255,.05);
+}
+.triangle{
+  width:45px;height:45px;
+  clip-path:polygon(50% 0%,0% 100%,100% 100%);
+  background:conic-gradient(var(--neon),transparent);
+  filter:drop-shadow(0 0 15px var(--neon));
+  animation:spin 3s linear infinite;
+}
+@keyframes spin{to{transform:rotate(360deg)}}
+.chat{flex:1;padding:20px;overflow-y:auto}
+.msg{max-width:80%;padding:12px 15px;border-radius:14px;margin-bottom:14px}
+.user{background:#1f2937;margin-left:auto}
+.ai{background:rgba(0,247,255,.1);border:1px solid rgba(0,247,255,.3)}
+.input-area{display:flex;gap:10px;padding:15px;border-top:1px solid rgba(255,255,255,.05)}
+input,select{
+  flex:1;padding:12px;border:none;border-radius:12px;
+  background:#020617;color:white;
+}
+button{
+  padding:12px 18px;border:none;border-radius:12px;
+  background:var(--neon);color:#020617;font-weight:bold;
+}
+</style>
+</head>
+
+<body>
+<div class="app">
+  <header>
+    <div class="triangle"></div>
+    <h2>Assistant Triangle</h2>
+  </header>
+
+  <div class="chat" id="chat"></div>
+
+  <div class="input-area">
+    <select id="mode">
+      <option value="friendly">Friendly</option>
+      <option value="evil">Evil</option>
+      <option value="professional">Professional</option>
+    </select>
+    <input id="input" placeholder="Talk to Assistant Triangle..." />
+    <button onclick="send()">Send</button>
+    <button onclick="voice()">🎤</button>
+  </div>
+</div>
+
+<script>
+const chat=document.getElementById("chat");
+const input=document.getElementById("input");
+const mode=document.getElementById("mode");
+
+function add(t,type){
+  const d=document.createElement("div");
+  d.className="msg "+type;
+  d.innerHTML=t;
+  chat.appendChild(d);
+  chat.scrollTop=chat.scrollHeight;
+}
+
+add("🔺 Assistant Triangle online.","ai");
+
+async function send(){
+  if(!input.value.trim())return;
+  add(input.value,"user");
+
+  const res=await fetch("http://localhost:3000/chat",{
+    method:"POST",
+    headers:{"Content-Type":"application/json"},
+    body:JSON.stringify({
+      message:input.value,
+      mode:mode.value
+    })
+  });
+  const data=await res.json();
+  add(data.reply,"ai");
+  speak(data.reply);
+  input.value="";
+}
+
+function speak(t){
+  const s=new SpeechSynthesisUtterance(t);
+  speechSynthesis.speak(s);
+}
+
+function voice(){
+  const r=new(window.SpeechRecognition||window.webkitSpeechRecognition)();
+  r.lang="en-US";
+  r.onresult=e=>{
+    input.value=e.results[0][0].transcript;
+    send();
+  };
+  r.start();
+}
+</script>
+</body>
+</html>
